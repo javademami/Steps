@@ -1,4 +1,3 @@
-// screens/MapScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import MapView, { Polyline } from 'react-native-maps';
@@ -28,6 +27,9 @@ export default function MapScreen() {
           setRouteCoordinates(prev => [...prev, newLocation.coords]);
         }
       );
+
+      // Cleanup the watch on unmount
+      return () => watch.remove();
     };
     getLocation();
   }, []);
@@ -40,8 +42,14 @@ export default function MapScreen() {
           initialRegion={{
             latitude: location.latitude,
             longitude: location.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
+            latitudeDelta: 0.001, // Increased delta for better view
+            longitudeDelta: 0.001, // Increased delta for better view
+          }}
+          region={{
+            latitude: location.latitude,
+            longitude: location.longitude,
+            latitudeDelta: 0.001, // Increased delta for better view
+            longitudeDelta: 0.001, // Increased delta for better view
           }}
         >
           <Polyline
