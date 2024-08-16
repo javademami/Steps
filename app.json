@@ -18,10 +18,28 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "ACTIVITY_RECOGNITION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "ACTIVITY_RECOGNITION"
+      ],
+      "package": "com.javademami.steps",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAHvD4AxcsrzZiiwpbNTWeybtK-95T0LjU"
+        }
       }
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "887a123a-89ae-4725-9a74-b7a24b895224"
+      }
     }
   }
 }
