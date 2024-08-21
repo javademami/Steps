@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import HomeScreen from '../screens/HomeScreen';
 import MapScreen from '../screens/MapScreen';
 import ChallengesScreen from '../screens/ChallengesScreen';
+import TargetsScreen from '../screens/TargetsScreen'; // اضافه کردن صفحه تارگت‌ها
 import { Ionicons } from '@expo/vector-icons';
 
 // ایجاد Navigator برای صفحه Home
@@ -49,6 +50,20 @@ function ChallengesStackNavigator() {
   );
 }
 
+// ایجاد Navigator برای صفحه Targets
+const TargetsStack = createStackNavigator();
+function TargetsStackNavigator() {
+  return (
+    <TargetsStack.Navigator>
+      <TargetsStack.Screen 
+        name="TargetsScreen" 
+        component={TargetsScreen} 
+        options={{ headerShown: false }} // حذف عنوان بالای صفحه
+      />
+    </TargetsStack.Navigator>
+  );
+}
+
 // ایجاد Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
 export default function AppNavigator() {
@@ -64,6 +79,8 @@ export default function AppNavigator() {
               iconName = 'map';
             } else if (route.name === 'ChallengesTab') {
               iconName = 'trophy';
+            } else if (route.name === 'TargetsTab') {
+              iconName = 'cube-outline'; // استفاده از آیکون معتبر
             }
             return <Ionicons name={iconName} size={size} color={color} />;
           },
@@ -83,6 +100,11 @@ export default function AppNavigator() {
           name="ChallengesTab" 
           component={ChallengesStackNavigator} 
           options={{ title: 'چالش‌ها' }} 
+        />
+        <Tab.Screen 
+          name="TargetsTab" 
+          component={TargetsStackNavigator} 
+          options={{ title: 'تارگت‌ها' }} // اضافه کردن عنوان صفحه تارگت‌ها
         />
       </Tab.Navigator>
     </NavigationContainer>
