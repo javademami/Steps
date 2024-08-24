@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import * as Progress from 'react-native-progress';
 import { Pedometer } from 'expo-sensors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,9 +12,15 @@ export default function HomeScreen({ route, navigation }) {
   const [stepCount, setStepCount] = useState(0);
   const [dailyDistances, setDailyDistances] = useState({});
   const [target, setTarget] = useState(route.params?.target || 1000);
-  const [startTime, setStartTime] = useState(null); // زمان شروع
-  const [timeSpent, setTimeSpent] = useState(0); // زمان سپری‌شده
+  const [startTime, setStartTime] = useState(null);
+  const [timeSpent, setTimeSpent] = useState(0);
   const [calories, setCalories] = useState(0);
+  const [challenges, setChallenges] = useState([
+    { id: 1, name: 'Challenge 1', targetSteps: 5000 },
+    { id: 2, name: 'Challenge 2', targetSteps: 10000 },
+    { id: 3, name: 'Challenge 3', targetSteps: 15000 },
+  ]);
+  const [achievedChallenges, setAchievedChallenges] = useState([]);
 
   useEffect(() => {
     const getPermissions = async () => {
@@ -34,7 +40,7 @@ export default function HomeScreen({ route, navigation }) {
         const subscription = Pedometer.watchStepCount(result => {
           updateStepCount(result.steps);
         });
-        setStartTime(new Date()); // ذخیره زمان شروع
+        setStartTime(new Date());
         return () => subscription.remove();
       }
     };
@@ -46,11 +52,11 @@ export default function HomeScreen({ route, navigation }) {
     if (startTime) {
       const interval = setInterval(() => {
         const now = new Date();
-        const diff = (now - startTime) / 1000 / 60; // محاسبه زمان سپری‌شده به دقیقه
+        const diff = (now - startTime) / 1000 / 60;
         setTimeSpent(diff.toFixed(1));
-      }, 1000); // هر ثانیه زمان را به‌روز می‌کند
+      }, 1000);
 
-      return () => clearInterval(interval); // پاک‌سازی تایمر
+      return () => clearInterval(interval);
     }
   }, [startTime]);
 
@@ -66,7 +72,7 @@ export default function HomeScreen({ route, navigation }) {
   };
 
   const saveDistance = async (steps) => {
-    const distance = (steps * 0.000762).toFixed(2); // محاسبه مسافت
+    const distance = (steps * 0.000762).toFixed(2);
     const date = new Date().toISOString().split('T')[0];
     try {
       const existingData = await AsyncStorage.getItem('dailyDistances');
@@ -80,7 +86,7 @@ export default function HomeScreen({ route, navigation }) {
   };
 
   const calculateCalories = (steps) => {
-    const burnedCalories = (steps / 1000) * 50; // فرض بر 50 کالری برای هر 1000 قدم
+    const burnedCalories = (steps / 1000) * 50;
     setCalories(burnedCalories.toFixed(1));
   };
 
@@ -105,6 +111,12 @@ export default function HomeScreen({ route, navigation }) {
     }
   }, [route.params?.target]);
 
+  useEffect(() => {
+    const achievedChallenges = challenges.filter(challenge => stepCount >= challenge.targetSteps);
+    setAchievedChallenges(achievedChallenges);
+    console.log('Achieved challenges:', achievedChallenges);
+  }, [stepCount, challenges]);
+
   const formatMonth = (month) => {
     return month.slice(0, 3).toUpperCase();
   };
@@ -117,7 +129,7 @@ export default function HomeScreen({ route, navigation }) {
   };
 
   const progress = stepCount > target ? 1 : stepCount / target;
-  const distance = (stepCount * 0.000762).toFixed(2); // فرضیه 0.000762 کیلومتر به ازای هر قدم
+  const distance = (stepCount * 0.000762).toFixed(2);
 
   return (
     <View style={styles.container}>
@@ -138,7 +150,6 @@ export default function HomeScreen({ route, navigation }) {
         </View>
       </View>
 
-      {/* قسمت گزارش سه ستونه */}
       <View style={styles.reportContainer}>
         <View style={styles.reportColumn}>
           <Text style={styles.reportValue}>{distance}</Text>
@@ -154,7 +165,8 @@ export default function HomeScreen({ route, navigation }) {
         </View>
       </View>
 
-      {/* کارت‌های اسلایدر به صورت هوریزنتال */}
+      {/* نمایش چالش‌های دست یافته */}
+      {/* نمایش مسافت‌های روزانه */}
       <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
         {Object.keys(dailyDistances).map((date) => (
           <View key={date} style={styles.card}>
@@ -170,6 +182,27 @@ export default function HomeScreen({ route, navigation }) {
           </View>
         ))}
       </ScrollView>
+      <View style={styles.challengesContainer}>
+      <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={styles.scrollContainer}>
+          {achievedChallenges.length > 0 ? (
+            achievedChallenges.map(challenge => (
+              <View key={challenge.id} style={styles.challengeCard}>
+                <View style={styles.challengeContent}>
+                  <Text style={styles.challengeSteps}>{stepCount}</Text>
+                </View>
+                <View style={styles.challengeTextContainer}>
+                  <Text style={styles.challengeTitle}>{challenge.name}</Text>
+                  <Text style={styles.challengeTarget}>Target: {challenge.targetSteps} steps</Text>
+                </View>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noChallengesText}></Text>
+          )}
+        </ScrollView>
+      </View>
+
+      
     </View>
   );
 }
@@ -180,18 +213,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: (props) => props.isDarkMode ? '#000' : '#fff',
-  },
-  text: {
-    fontSize: 18,
-    marginVertical: 10,
-    color: (props) => props.isDarkMode ? '#fff' : '#000',
   },
   progressContainer: {
     marginVertical: 20,
     alignItems: 'center',
     position: 'relative',
-    
   },
   stepCountOverlay: {
     position: 'absolute',
@@ -228,7 +254,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: 100,
-    height:140,
+    height: 140,
     padding: 15,
     borderRadius: 10,
     backgroundColor: '#ffffff',
@@ -239,10 +265,54 @@ const styles = StyleSheet.create({
   cardDate: {
     fontSize: 16,
     marginBottom: 5,
-    fontWeight:   'bold',
+    fontWeight: 'bold',
   },
   cardDistance: {
     fontSize: 14,
     marginBottom: 5,
+  },
+  challengesContainer: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  challengeCard: {
+    width: 160,
+    height: 140,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: '#e0f7fa',
+    marginHorizontal: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: '#00bcd4',
+    borderWidth: 1,
+  },
+  challengeContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  challengeSteps: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#00796b',
+  },
+  challengeTextContainer: {
+    flex: 2,
+    alignItems: 'center',
+  },
+  challengeTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#00796b',
+  },
+  challengeTarget: {
+    fontSize: 14,
+    color: '#004d40',
+  },
+  noChallengesText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#888',
   },
 });
