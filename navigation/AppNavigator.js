@@ -18,34 +18,44 @@ const Tab = createBottomTabNavigator();
 const AppNavigator = () => {
   const { isDarkMode, toggleTheme } = useTheme();
 
-  const screenOptions = (route, navigation) => ({
-    tabBarIcon: ({ color, size }) => {
+  const screenOptions = ({ route, navigation }) => ({
+    tabBarIcon: ({ color, size, focused }) => {
       let iconName;
       if (route.name === 'HomeTab') {
-        iconName = 'home';
+        iconName = 'home-outline';
       } else if (route.name === 'MapTab') {
-        iconName = 'map';
+        iconName = 'navigate-circle-outline';
       } else if (route.name === 'ChallengesTab') {
-        iconName = 'trophy';
+        iconName = 'medal-outline';
       } else if (route.name === 'TargetsTab') {
-        iconName = 'cube-outline';
+        iconName = 'settings-outline';
       }
-      return <Ionicons name={iconName} size={size} color={color} />;
+
+      // تغییر رنگ آیکون صفحه فعلی به #3DBCCB
+      const iconColor = focused ? '#3DBCCB' : color;
+
+      return <Ionicons name={iconName} size={size} color={iconColor} />;
     },
     headerStyle: {
       backgroundColor: isDarkMode ? '#333' : '#fff',
     },
     headerTintColor: isDarkMode ? '#fff' : '#000',
     headerTitleAlign: 'left',
-    headerLeft: (props) => route.name !== 'HomeTab' && (
-      <Ionicons 
-        name="arrow-back" 
-        size={24} 
-        color={isDarkMode ? '#fff' : '#000'} 
-        style={{ marginLeft: 15 }} 
-        onPress={() => navigation.goBack()} 
-      />
-    ),
+    headerLeft: () => {
+      // اطمینان حاصل کردن از وجود navigation و goBack
+      if (navigation && navigation.canGoBack()) {
+        return route.name !== 'HomeTab' && (
+          <Ionicons 
+            name="arrow-back" 
+            size={24} 
+            color={isDarkMode ? '#fff' : '#000'} 
+            style={{ marginLeft: 15 }} 
+            onPress={() => navigation.goBack()} 
+          />
+        );
+      }
+      return null;
+    },
     headerRight: () => (
       <Ionicons 
         name={isDarkMode ? 'sunny' : 'moon'} 
@@ -59,7 +69,13 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Tab.Navigator screenOptions={({ route, navigation }) => screenOptions(route, navigation)}>
+      <Tab.Navigator 
+        screenOptions={({ route }) => ({
+          ...screenOptions({ route }),
+          tabBarActiveTintColor: '#3DBCCB', // رنگ آیکون فعال
+          tabBarInactiveTintColor: '#888', // رنگ آیکون غیرفعال
+        })}
+      >
         <Tab.Screen name="HomeTab" component={HomeStackNavigator} options={{ title: '' }} />
         <Tab.Screen name="MapTab" component={MapStackNavigator} options={{ title: '' }} />
         <Tab.Screen name="ChallengesTab" component={ChallengesStackNavigator} options={{ title: '' }} />

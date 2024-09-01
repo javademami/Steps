@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, Button } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Button, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -12,6 +12,7 @@ export default function TargetsScreen({ navigation }) {
 
   useEffect(() => {
     loadUserInfo();
+    loadTarget();  // Load target value when component mounts
   }, []);
 
   const loadUserInfo = async () => {
@@ -25,11 +26,24 @@ export default function TargetsScreen({ navigation }) {
     }
   };
 
+  const loadTarget = async () => {
+    try {
+      const savedTarget = await AsyncStorage.getItem('dailyTarget');
+      if (savedTarget) setTarget(parseInt(savedTarget, 10));
+    } catch (error) {
+      console.error("Error loading target", error);
+    }
+  };
+
   const saveUserInfo = async () => {
     try {
       await AsyncStorage.setItem('userHeight', height.toString());
       await AsyncStorage.setItem('userWeight', weight.toString());
-      alert("اطلاعات با موفقیت ذخیره شد!");
+      await AsyncStorage.setItem('dailyTarget', target.toString());  // Save target
+      Alert.alert("اطلاعات با موفقیت ذخیره شد!");
+
+      // Navigate to HomeScreen with updated target value
+      navigation.navigate('HomeScreen', { target });
     } catch (error) {
       console.error("Error saving user info", error);
     }
@@ -37,33 +51,51 @@ export default function TargetsScreen({ navigation }) {
 
   const handleTargetChange = (value) => {
     setTarget(parseInt(value, 10));
-    navigation.navigate('HomeScreen', { target: parseInt(value, 10) });
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>تارگت روزانه</Text>
-      <Picker selectedValue={target.toString()} style={styles.picker} onValueChange={handleTargetChange}>
+      <Picker
+        selectedValue={target.toString()}
+        style={styles.picker}
+        onValueChange={(value) => handleTargetChange(value)}
+      >
         {[1000, 2500, 5000, 7000, 9000, 12000, 15000, 20000, 25000, 30000].map(value => (
           <Picker.Item key={value} label={`${value} قدم`} value={value.toString()} />
         ))}
       </Picker>
 
       <Text style={styles.header}>قد (سانتی‌متر)</Text>
-      <Picker selectedValue={height.toString()} style={styles.picker} onValueChange={(value) => setHeight(parseInt(value, 10))}>
+      <Picker
+        selectedValue={height.toString()}
+        style={styles.picker}
+        onValueChange={(value) => setHeight(parseInt(value, 10))}
+      >
         {Array.from({ length: 51 }, (_, i) => 150 + i).map(value => (
           <Picker.Item key={value} label={`${value}`} value={value.toString()} />
         ))}
       </Picker>
 
       <Text style={styles.header}>وزن (کیلوگرم)</Text>
-      <Picker selectedValue={weight.toString()} style={styles.picker} onValueChange={(value) => setWeight(parseInt(value, 10))}>
+      <Picker
+        selectedValue={weight.toString()}
+        style={styles.picker}
+        onValueChange={(value) => setWeight(parseInt(value, 10))}
+      >
         {Array.from({ length: 131 }, (_, i) => 50 + i).map(value => (
           <Picker.Item key={value} label={`${value}`} value={value.toString()} />
         ))}
       </Picker>
 
-      <Button title="ذخیره اطلاعات" onPress={saveUserInfo} />
+      <View style={styles.buttonContainer}>
+        <Button
+          title="ذخیره"
+          onPress={saveUserInfo}
+          color="#3DBCCB"
+          accessibilityLabel="ذخیره اطلاعات"
+        />
+      </View>
     </View>
   );
 }
@@ -78,10 +110,17 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 24,
     marginVertical: 10,
+    textAlign: 'center',
   },
   picker: {
     width: screenWidth - 40,
-    height: 50,
+    height: 60,
     marginBottom: 20,
+    fontSize: 18,
+  },
+  buttonContainer: {
+    marginTop: 20,
+    width: screenWidth - 40,
+    
   },
 });

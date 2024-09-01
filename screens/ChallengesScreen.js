@@ -19,23 +19,48 @@ export default function ChallengesScreen({ route }) {
   const totalSteps = route.params?.totalSteps || 0;
 
   useEffect(() => {
-    const checkChallenges = async () => {
-      let existingCompletedChallenges = await AsyncStorage.getItem('completedChallenges');
-      existingCompletedChallenges = existingCompletedChallenges ? JSON.parse(existingCompletedChallenges) : [];
-
-      challenges.forEach(async (challenge) => {
-        if (totalSteps >= challenge.steps && !existingCompletedChallenges.includes(challenge.id)) {
-          // چالش تکمیل شده است
-          existingCompletedChallenges.push(challenge.id);
-          await AsyncStorage.setItem('completedChallenges', JSON.stringify(existingCompletedChallenges));
-          setCompletedChallenges(existingCompletedChallenges);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          Alert.alert('تبریک!', `شما چالش "${challenge.title}" را کامل کردید!`);
+    const loadCompletedChallenges = async () => {
+      try {
+        const existingCompletedChallenges = await AsyncStorage.getItem('completedChallenges');
+        if (existingCompletedChallenges) {
+          setCompletedChallenges(JSON.parse(existingCompletedChallenges));
         }
-      });
+      } catch (error) {
+        console.error("Error loading completed challenges:", error);
+      }
     };
 
-    checkChallenges();
+    loadCompletedChallenges();
+  }, []);
+
+  useEffect(() => {
+    const checkChallenges = async () => {
+      try {
+        let existingCompletedChallenges = await AsyncStorage.getItem('completedChallenges');
+        existingCompletedChallenges = existingCompletedChallenges ? JSON.parse(existingCompletedChallenges) : [];
+
+        const newCompletedChallenges = [...existingCompletedChallenges];
+
+        challenges.forEach(async (challenge) => {
+          if (totalSteps >= challenge.steps && !newCompletedChallenges.includes(challenge.id)) {
+            newCompletedChallenges.push(challenge.id);
+
+            await AsyncStorage.setItem('completedChallenges', JSON.stringify(newCompletedChallenges));
+
+            setCompletedChallenges([...newCompletedChallenges]);
+
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Alert.alert('تبریک!', `شما چالش "${challenge.title}" را کامل کردید!`);
+          }
+        });
+      } catch (error) {
+        console.error("Error checking challenges:", error);
+      }
+    };
+
+    if (totalSteps > 0) {
+      checkChallenges();
+    }
   }, [totalSteps]);
 
   const renderChallenge = ({ item }) => {
@@ -64,47 +89,18 @@ export default function ChallengesScreen({ route }) {
       data={challenges}
       renderItem={renderChallenge}
       keyExtractor={(item) => item.id.toString()}
-      numColumns={2} // نمایش دو چالش در هر ردیف
+      numColumns={2}
       contentContainerStyle={styles.challengeList}
     />
   );
 }
 
 const styles = StyleSheet.create({
-  challengeContainer: {
-    flex: 1,
-    alignItems: 'center',
-    margin: 10,
-    opacity: 0.3,
-  },
-  medal: {
-    width: 150,
-    height: 150,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepsText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  stepsLabel: {
-    fontSize: 14,
-    color: '#fff',
-    marginTop: 5,
-  },
-  challengeTitle: {
-    marginTop: 10,
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  challengeDate: {
-    fontSize: 14,
-    color: '#666',
-  },
-  challengeList: {
-    justifyContent: 'center',
-    paddingBottom: 20,
-  },
+  challengeContainer: { flex: 1, alignItems: 'center', margin: 10, opacity: 0.3 },
+  medal: { width: 150, height: 150, justifyContent: 'center', alignItems: 'center' },
+  stepsText: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
+  stepsLabel: { fontSize: 14, color: '#fff', marginTop: 5 },
+  challengeTitle: { marginTop: 10, fontSize: 16, fontWeight: 'bold', color: '#000' },
+  challengeDate: { fontSize: 14, color: '#666' },
+  challengeList: { justifyContent: 'center', paddingBottom: 20 },
 });
