@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ImageBackground, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, FlatList, Alert, Image } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -85,22 +85,98 @@ export default function ChallengesScreen({ route }) {
   };
 
   return (
-    <FlatList
-      data={challenges}
-      renderItem={renderChallenge}
-      keyExtractor={(item) => item.id.toString()}
-      numColumns={2}
-      contentContainerStyle={styles.challengeList}
-    />
+    <View style={styles.container}>
+      <View style={styles.headerContainer}>
+        {/* اضافه کردن تصویر جام */}
+        <Image
+          source={require('../assets/cup.png')} // تصویر جام جدید
+          style={styles.trophy}
+          resizeMode="contain"
+        />
+        <Text style={styles.headerText}>دستاوردها</Text> 
+        <Text style={styles.angizeshi}>"دستاوردهای بزرگ از قدم‌های کوچک و پیوسته ساخته می‌شوند، هر قدمی که برمی‌داری، تو را یک قدم به رؤیاهایت نزدیک‌تر می‌کند."</Text>
+      </View>
+
+      <FlatList
+        data={challenges}
+        renderItem={renderChallenge}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2}
+        contentContainerStyle={styles.challengeList}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  challengeContainer: { flex: 1, alignItems: 'center', margin: 10, opacity: 0.3 },
-  medal: { width: 150, height: 150, justifyContent: 'center', alignItems: 'center' },
-  stepsText: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
-  stepsLabel: { fontSize: 14, color: '#fff', marginTop: 5 },
-  challengeTitle: { marginTop: 10, fontSize: 16, fontWeight: 'bold', color: '#000' },
-  challengeDate: { fontSize: 14, color: '#666' },
-  challengeList: { justifyContent: 'center', paddingBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius:10
+    
+  },
+  headerContainer: {
+    alignItems: 'center',
+    marginVertical: 0,
+    backgroundColor: '#3DBCCB',
+    height:320,
+    paddingVertical:30,
+    borderBottomEndRadius:30,
+    borderBottomLeftRadius:30,
+  },
+  trophy: {
+    width: 280,
+    height: 160,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 10,
+  },
+  challengeContainer: { 
+    flex: 1, 
+    alignItems: 'center', 
+    margin: 10, 
+    opacity: 0.3, 
+    
+  },
+  medal: { 
+    width: 120, 
+    height: 120, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  stepsText: { 
+    fontSize: 24, 
+    fontWeight: 'bold', 
+    color: '#fff' 
+  },
+  stepsLabel: { 
+    fontSize: 14, 
+    color: '#fff', 
+    marginTop: 5 
+  },
+  challengeTitle: { 
+    marginTop: 10, 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#000' 
+  },
+  challengeDate: { 
+    fontSize: 14, 
+    color: '#666' 
+  },
+  challengeList: { 
+    justifyContent: 'center', 
+    paddingBottom: 20 ,
+    
+  },
+  angizeshi: { 
+    justifyContent: 'center', 
+    color: '#fff' ,
+    padding:10,
+    fontSize:14,
+    
+  },
 });

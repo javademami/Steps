@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, Button, Alert } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Button, Alert, TextInput, Image, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker'; // Import from expo-image-picker
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -9,6 +10,8 @@ export default function TargetsScreen({ navigation }) {
   const [target, setTarget] = useState(1000);
   const [height, setHeight] = useState(170); // Default height
   const [weight, setWeight] = useState(70);  // Default weight
+  const [profileImage, setProfileImage] = useState(null);
+  const [username, setUsername] = useState('');
 
   useEffect(() => {
     loadUserInfo();
@@ -19,8 +22,12 @@ export default function TargetsScreen({ navigation }) {
     try {
       const savedHeight = await AsyncStorage.getItem('userHeight');
       const savedWeight = await AsyncStorage.getItem('userWeight');
+      const savedProfileImage = await AsyncStorage.getItem('profileImage');
+      const savedUsername = await AsyncStorage.getItem('username');
       if (savedHeight) setHeight(parseInt(savedHeight, 10));
       if (savedWeight) setWeight(parseInt(savedWeight, 10));
+      if (savedProfileImage) setProfileImage(savedProfileImage);
+      if (savedUsername) setUsername(savedUsername);
     } catch (error) {
       console.error("Error loading user info", error);
     }
@@ -40,6 +47,8 @@ export default function TargetsScreen({ navigation }) {
       await AsyncStorage.setItem('userHeight', height.toString());
       await AsyncStorage.setItem('userWeight', weight.toString());
       await AsyncStorage.setItem('dailyTarget', target.toString());  // Save target
+      await AsyncStorage.setItem('profileImage', profileImage || '');
+      await AsyncStorage.setItem('username', username);
       Alert.alert("اطلاعات با موفقیت ذخیره شد!");
 
       // Navigate to HomeScreen with updated target value
@@ -53,8 +62,47 @@ export default function TargetsScreen({ navigation }) {
     setTarget(parseInt(value, 10));
   };
 
+  const handleImagePicker = async () => {
+    // Ask the user for permission to access the media library
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+
+    // Launch the image picker
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setProfileImage(result.assets[0].uri);
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.ax}>
+            {profileImage && (
+        <Image source={{ uri: profileImage }} style={styles.profileImage} />
+      )}
+      <Text style={styles.intro}>خوش آمدی</Text>
+      <Text style={styles.welcome}>{username}</Text>
+      </View>
+       
+      <Text style={styles.header}>آپلود عکس پروفایل</Text>
+      <Button title="انتخاب عکس" onPress={handleImagePicker} color="#3DBCCB"/>
+     
+      <Text style={styles.header}>نام کاربری</Text>
+      <TextInput
+        style={styles.textInput}
+        placeholder="نام خود را وارد کنید"
+        value={username}
+        onChangeText={setUsername}
+      />
       <Text style={styles.header}>تارگت روزانه</Text>
       <Picker
         selectedValue={target.toString()}
@@ -96,16 +144,17 @@ export default function TargetsScreen({ navigation }) {
           accessibilityLabel="ذخیره اطلاعات"
         />
       </View>
-    </View>
+      <View style={styles.space}></View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    
   },
   header: {
     fontSize: 24,
@@ -121,6 +170,46 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 20,
     width: screenWidth - 40,
+  },
+  profileImage: {
+    width: 100, // Adjust width as needed
+    height: 100, // Adjust height as needed
+    borderRadius: 50, // Makes the image circular
+    marginVertical: 10,
+    borderColor: '#fff',
+    borderWidth:1,
+  },
+  textInput: {
+    width: screenWidth - 40,
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    marginBottom: 20,
+    borderRadius: 5,
+  },
+  ax: {
+    width:screenWidth,
+    height:250,
+    backgroundColor:'#3DBCCB',
+    alignItems: 'center',
+    paddingVertical:40,
+    borderBottomEndRadius:30,
+    borderBottomLeftRadius:30,
     
   },
+  welcome:{
+   color: '#fff',
+   fontSize:20,
+   fontWeight: 'bold',
+  },
+  intro:{
+    color: '#fff',
+    fontSize:14,
+    
+   },
+   space:{
+    height:40,
+   }
+  
 });
